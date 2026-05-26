@@ -62,7 +62,6 @@ def root():
 # Post endpoint for creating new POST
 @app.post("/new_posts", status_code=status.HTTP_201_CREATED)
 def new_posts(post: Post):
-    
     cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (post.title, post.content, post.published),)
     new_post = cursor.fetchone()
     conn.commit()
@@ -78,7 +77,6 @@ def new_posts(post: Post):
 # Get post by id
 @app.get("/posts/{id}")
 def get_post_by_id(id : int, response: Response):
-    
     cursor.execute("""SELECT * FROM posts WHERE id = %s""",(id,))
     post = cursor.fetchone()
     
@@ -101,7 +99,6 @@ def get_posts():
 # Delete post by id 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    
     cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, str(id),)
     post = cursor.fetchone()
     conn.commit()
@@ -114,14 +111,13 @@ def delete_post(id: int):
         
     # my_posts.pop(index)
     # return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
     return {"message" : f"post: {post} deleted"}
     
     
 # Update post by id
 @app.put("/posts/{id}", status_code=status.HTTP_200_OK)
 def update_post(id: int, post: Post):
-    
-    print(post.published)
     cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s  WHERE id = %s RETURNING *""", (post.title, post.content, post.published, id,))
     updated_post = cursor.fetchone()
     conn.commit()
