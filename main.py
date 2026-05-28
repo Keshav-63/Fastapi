@@ -1,11 +1,16 @@
 from gettext import find
 import time
-from fastapi import FastAPI, Body, Response, status, HTTPException
+from fastapi import Depends, FastAPI, Body, Response, status, HTTPException
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import models
+from sqlalchemy.orm import Session
+from database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -61,17 +66,25 @@ def root():
 
 # Post endpoint for creating new POST
 @app.post("/new_posts", status_code=status.HTTP_201_CREATED)
-def new_posts(post: Post):
-    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (post.title, post.content, post.published),)
-    new_post = cursor.fetchone()
-    conn.commit()
+def new_posts(post: Post, db: Session = Depends(get_db)):
+    new_post = models.Post(title=post.title, content=post.content, published=post.published)
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    
+           
+    # Traditional way of inserting data into database using psycopg2 
+    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (post.title, post.content, post.published,))
+    # new_post = cursor.fetchone()
+    # conn.commit()
+    
     
     # post_dict = post.model_dump() # use model_dump bcz dict is deprecated
     # post_dict['id'] = randrange(0, 100)
     # my_posts.append(post_dict)
     # print(post_dict) 
     
-    return {"data" : f"created post {new_post}"}
+    return {"data" : new_post}
 
 
 # Get post by id
@@ -90,16 +103,18 @@ def get_post_by_id(id : int, response: Response):
 
 # Get all post
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT * FROM posts""")
-    post = cursor.fetchall()
-    return {"data": post}
+def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    
+    # cursor.execute("""SELECT * FROM posts""")
+    # post = cursor.fetchall()
+    return {"data": posts}
 
 
 # Delete post by id 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, str(id),)
+    cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, str(id,))
     post = cursor.fetchone()
     conn.commit()
     
@@ -133,8 +148,13 @@ def update_post(id: int, post: Post):
     # my_posts[index] = post_dict
     
     return {"data": f"updated post {updated_post}"}
-        
-    
+
+
+# sqlalchemy check
+@app.get("/sqlalchemy")
+def test_sqlalchemy(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return {"data": posts}
 
 
 # @app.post("/createposts")
