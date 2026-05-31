@@ -1,6 +1,6 @@
 from datetime import date, datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr
+from typing import Annotated, Optional
+from pydantic import BaseModel, EmailStr, Field
 
 #Users
 class UserCreate(BaseModel):
@@ -49,3 +49,7 @@ class PostOut(PostBase):
 
     class Config:
         orm_mode = True
+        
+class Vote(BaseModel):
+    post_id : int
+    dir : Annotated[int, Field(strict=True, le=1)]
