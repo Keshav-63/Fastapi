@@ -6,6 +6,10 @@ import models, schemas, utils
 from sqlalchemy.orm import Session
 from database import engine, get_db
 from routers import post, user, auth
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -15,7 +19,7 @@ app = FastAPI()
 while True:
     
     try:
-        conn = psycopg2.connect(host='localhost', database='fastapi-course', user='postgres', password='admin', cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(host=os.getenv('DB_HOST'), database=os.getenv('DB_NAME'), user=os.getenv('DB_USER'), password=os.getenv('DB_PASSWORD'), cursor_factory=RealDictCursor)
         cursor = conn.cursor()
         print("Postgres Database connection was succesfull!")
         break

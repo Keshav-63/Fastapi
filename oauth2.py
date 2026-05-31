@@ -5,6 +5,10 @@ import schemas
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 import database, models
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 bearer_scheme = HTTPBearer()
 
@@ -12,9 +16,9 @@ bearer_scheme = HTTPBearer()
 #ALGORITHM
 #EXPRIATION TIME
 
-SECRET_KEY = "09jja8ujfiujhfkbffjsaifggw8u273ryue8897343rjh4j4k1n4jb12334kj123b124j3rjoenroiur8vruoielkz"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 def create_access_token(data: dict):
     to_encode = data.copy()
